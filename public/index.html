@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat App</title>
+    <style>
+        #message{
+            width:40%;
+            height:40px;
+            padding:8px;
+            border:2px solid blue;
+            border-radius:15px;
+            font-size:20px;
+            margin-right:10px;
+        }
+        .sendBtn{
+            height:50px;
+            border:none;
+            cursor:pointer;
+            outline: none;
+            background-color: pink;
+            border-radius:20px;
+            padding: 10px 20px;
+            font-size:25px;
+            font-weight:700;
+            transition: background-color 0.5s, transform 0.9s;
+        }
+        
+        .sendBtn:active {
+      background-color: #003f7f;
+      transform: scale(0.95);
+    }
+      .self {
+        color: black;
+        background-color: aqua;
+        font-size: 25px;
+        font-weight: 700;
+      }
+      .other {
+        color: black;
+        background-color: chartreuse;
+        font-size: 25px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Chat App</h1>
+    
+    <div class="allMessage"></div>
+    <input type="text" id="message" placeholder="Type your message..." />
+    <button class="sendBtn">Send</button>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      const sendBtn = document.querySelector(".sendBtn");
+      const messageInput = document.querySelector("#message");
+      const messageOutput = document.querySelector(".allMessage");
+
+      // Listen for incoming messages and display them
+      socket.on("msg", (data) => {
+        const p = document.createElement("p");
+
+        // Check if the message is from the current user or someone else
+        if (data.id === socket.id) {
+          // p.innerText = `You: ${data.message}`;
+          p.classList.add("self"); // Style for current user's messages
+        } else {
+          p.innerText = `User: ${data.message}`;
+          p.classList.add("other"); // Style for other users' messages
+        }
+
+        messageOutput.appendChild(p);
+      });
+
+      // Send message to server when button is clicked
+      sendBtn.addEventListener("click", () => {
+        const message = messageInput.value;
+        if (message.trim() !== "") {
+          // Ensure it's not empty
+          socket.emit("user-message", message); // Send message to server
+
+          // Immediately append the message to the chat window for the sender
+          const p = document.createElement("p");
+          p.innerText = `You: ${message}`;
+          p.classList.add("self"); // Style for current user's message
+          messageOutput.appendChild(p);
+
+          messageInput.value = ""; // Clear input field
+        }
+      });
+
+      // Optionally, send message when pressing Enter key
+      messageInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          sendBtn.click(); // Trigger send button click event
+        }
+      });
+    </script>
+  </body>
+</html>
